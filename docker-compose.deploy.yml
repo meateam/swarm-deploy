@@ -1,0 +1,230 @@
+version: "3.4"
+services:
+  traefik:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+    image: traefik:latest
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1G
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    command:
+      - --api.insecure=true
+      - --api.dashboard=true
+      - --api.debug=true
+      - --log.level=DEBUG
+      - --accesslog=true
+      - --providers.docker
+      - --providers.docker.watch
+      - --providers.docker.swarmMode
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8080:8080"
+
+  drive-ui:
+    image: "drivehub.azurecr.io/meateam/drive-ui:v2.0.1"
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 128Mi
+      labels:
+        - "traefik.enable=true"
+
+  api-gateway:
+    image: "drivehub.azurecr.io/meateam/api-gateway:v2.0"
+    env_file:
+      - /root/PROD/kd.config
+    ports:
+      - "3001:8080"
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: 200m
+          memory: 2048Mi
+      labels:
+        - "traefik.enable=true"
+    depends_on:
+      - upload-service
+      - download-service
+      - file-service
+      - authentication-service
+      - permission-service
+      - search-service
+      - gotenberg-service
+
+  upload-service:
+    image: "drivehub.azurecr.io/meateam/upload-service:v1.3"
+    env_file:
+      - /root/PROD/kd.config
+    ports:
+      - "3002:8080"
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: 200m
+          memory: 4096Mi
+
+  download-service:
+    image: "drivehub.azurecr.io/meateam/download-service:v1.3"
+    env_file:
+      - /root/PROD/kd.config
+    ports:
+      - "3003:8080"
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: 200m
+          memory: 1024Mi
+
+  file-service:
+    image: "drivehub.azurecr.io/meateam/file-service:v1.3"
+    env_file:
+      - /root/PROD/kd.config
+    ports:
+      - "3004:8080"
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: 100m
+          memory: 256Mi
+
+  authentication-service:
+    image: "drivehub.azurecr.io/meateam/authentication-service:v1.3"
+    ports:
+      - "3005:8080"
+    env_file:
+      - /root/PROD/kd.config
+    depends_on:
+      - user-service
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: 100m
+          memory: 256Mi
+
+  user-service:
+    image: "drivehub.azurecr.io/meateam/user-service:v1.3"
+    ports:
+      - "3007:8080"
+    env_file:
+      - /root/PROD/kd.config
+    depends_on:
+      - redis
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: 100m
+          memory: 256Mi
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+
+  permission-service:
+    image: "drivehub.azurecr.io/meateam/permission-service:v1.3"
+    ports:
+      - "3008:8080"
+    env_file:
+      - /root/PROD/kd.config
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: 200m
+          memory: 512Mi
+
+  search-service:
+    image: "drivehub.azurecr.io/meateam/search-service:v1.3"
+    env_file:
+      - /root/PROD/kd.config
+    ports:
+      - "3009:8080"
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: 200m
+          memory: 512Mi
+
+  gotenberg-service:
+    image: "drivehub.azurecr.io/meateam/gotenberg:6"
+    env_file:
+      - /root/PROD/kd.config
+    tmpfs:
+      - /tmp
+      - /gotenberg/tmp
+    ports:
+      - "3010:8080"
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: 200m
+          memory: 1024Mi
+
+  spike-service:
+    image: "drivehub.azurecr.io/meateam/spike-service:v1.3"
+    env_file:
+      - /root/PROD/kd.config
+    depends_on:
+      - redis
+    ports:
+      - "3011:8080"
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: 100m
+          memory: 256Mi
+
+  delegation-service:
+    image: "drivehub.azurecr.io/meateam/delegation-service:v1.3"
+    ports:
+      - "3012:8080"
+    env_file:
+      - /root/PROD/kd.config
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: 100m
+          memory: 256Mi
+
+  permit-service:
+    image: "drivehub.azurecr.io/meateam/permit-service:v1.3"
+    env_file:
+      - /root/PROD/kd.config
+    ports:
+      - "3013:8080"
+    depends_on:
+      - spike-service
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: 200m
+          memory: 256Mi
