@@ -48,7 +48,7 @@ services:
       - authentication-service
       - permission-service
       - search-service
-      - gotenberg-service
+      - gotenberg
 
   upload-service:
     image: "drivehub.azurecr.io/meateam/upload-service:v1.3"
@@ -150,7 +150,7 @@ services:
           cpus: "2.0"
           memory: 1G
 
-  gotenberg-service:
+  gotenberg:
     image: "drivehub.azurecr.io/meateam/gotenberg:6"
     env_file:
       - /root/PROD/kd.config
@@ -208,3 +208,4 @@ services:
         limits:
           cpus: "2.0"
           memory: 1G
+          
