@@ -1,11 +1,7 @@
 version: "3.4"
 services:
-  traefik:
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "5m"
-    image: traefik:latest
+  nginx:
+    image: nginx:latest
     deploy:
       mode: global
       placement:
@@ -16,21 +12,9 @@ services:
           cpus: "2.0"
           memory: 1G
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-    command:
-      - --api.insecure=true
-      - --api.dashboard=true
-      - --api.debug=true
-      - --log.level=DEBUG
-      - --accesslog=true
-      - --providers.docker
-      - --providers.docker.watch
-      - --providers.docker.swarmMode
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
+      - "/root/PROD/nginx.conf:/etc/nginx/nginx.conf"
     ports:
       - "80:80"
-      - "8080:8080"
 
   drive-ui:
     image: "drivehub.azurecr.io/meateam/drive-ui:v2.0.1"
@@ -42,10 +26,8 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: "1.0"
-          memory: 128Mi
-      labels:
-        - "traefik.enable=true"
+          cpus: "2.0"
+          memory: 1G
 
   api-gateway:
     image: "drivehub.azurecr.io/meateam/api-gateway:v2.0"
@@ -57,10 +39,8 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: 200m
-          memory: 2048Mi
-      labels:
-        - "traefik.enable=true"
+          cpus: "2.0"
+          memory: 1G
     depends_on:
       - upload-service
       - download-service
@@ -80,8 +60,8 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: 200m
-          memory: 4096Mi
+          cpus: "2.0"
+          memory: 1G
 
   download-service:
     image: "drivehub.azurecr.io/meateam/download-service:v1.3"
@@ -93,8 +73,8 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: 200m
-          memory: 1024Mi
+          cpus: "2.0"
+          memory: 1G
 
   file-service:
     image: "drivehub.azurecr.io/meateam/file-service:v1.3"
@@ -106,8 +86,8 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: 100m
-          memory: 256Mi
+          cpus: "2.0"
+          memory: 1G
 
   authentication-service:
     image: "drivehub.azurecr.io/meateam/authentication-service:v1.3"
@@ -121,8 +101,8 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: 100m
-          memory: 256Mi
+          cpus: "2.0"
+          memory: 1G
 
   user-service:
     image: "drivehub.azurecr.io/meateam/user-service:v1.3"
@@ -136,8 +116,8 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: 100m
-          memory: 256Mi
+          cpus: "2.0"
+          memory: 1G
 
   redis:
     image: "redis:alpine"
@@ -154,8 +134,8 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: 200m
-          memory: 512Mi
+          cpus: "2.0"
+          memory: 1G
 
   search-service:
     image: "drivehub.azurecr.io/meateam/search-service:v1.3"
@@ -167,8 +147,8 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: 200m
-          memory: 512Mi
+          cpus: "2.0"
+          memory: 1G
 
   gotenberg-service:
     image: "drivehub.azurecr.io/meateam/gotenberg:6"
@@ -183,8 +163,8 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: 200m
-          memory: 1024Mi
+          cpus: "2.0"
+          memory: 1G
 
   spike-service:
     image: "drivehub.azurecr.io/meateam/spike-service:v1.3"
@@ -198,8 +178,8 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: 100m
-          memory: 256Mi
+          cpus: "2.0"
+          memory: 1G
 
   delegation-service:
     image: "drivehub.azurecr.io/meateam/delegation-service:v1.3"
@@ -211,8 +191,8 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: 100m
-          memory: 256Mi
+          cpus: "2.0"
+          memory: 1G
 
   permit-service:
     image: "drivehub.azurecr.io/meateam/permit-service:v1.3"
@@ -226,5 +206,5 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: 200m
-          memory: 256Mi
+          cpus: "2.0"
+          memory: 1G
